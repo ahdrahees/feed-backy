@@ -1,9 +1,18 @@
 {
 	"canisters": {
+		"backend": {
+			"declarations": {
+				"node_compatibility": true,
+				"output": "src/declarations"
+			},
+			"main": "src/backend/main.mo",
+			"type": "motoko"
+		},
 		"frontend": {
 			"type": "assets",
-			"source": ["build/"],
-
+			"source": [
+				"build/"
+			],
 			"frontend": {
 				"entrypoint": "build/index.html"
 			}
@@ -11,7 +20,7 @@
 	},
 	"defaults": {
 		"build": {
-			"packtool": ""
+			"packtool": "mops sources"
 		}
 	}
 }
