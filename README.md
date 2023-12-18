@@ -60,7 +60,7 @@ Once you've created a project and installed dependencies with `npm install` (or 
 
 **Deploy the Local Internet Identity**: Run the following command to deploy the local Internet Identity:
 
-    ```bash
+    ```
     npm run localii
     ```
 
