@@ -165,6 +165,7 @@
 						<Input
 							bind:value={userName}
 							on:input={validateInput}
+							on:mouseover={validateInput}
 							class={isValidInput
 								? 'font-medium'
 								: 'font-medium  ring ring-red-500 ring-offset-4 ring-offset-red-300'}
@@ -186,6 +187,7 @@
 						<Input
 							bind:value={brandName}
 							on:input={validateInput}
+							on:mouseover={validateInput}
 							class={isValidInput || !message.includes('Brand Name')
 								? 'font-medium'
 								: 'font-medium  ring ring-red-500 ring-offset-4 ring-offset-red-300'}
@@ -203,6 +205,7 @@
 						<Input
 							bind:value={industry}
 							on:input={validateInput}
+							on:mouseover={validateInput}
 							class={isValidInput || !message.includes('Industry')
 								? 'font-medium'
 								: 'font-medium  ring ring-red-500 ring-offset-4 ring-offset-red-300'}
@@ -220,6 +223,7 @@
 						<Input
 							bind:value={productOrServiceCategory}
 							on:input={validateInput}
+							on:mouseover={validateInput}
 							class={isValidInput || !message.includes('Product / Service Category')
 								? 'font-medium'
 								: 'font-medium  ring ring-red-500 ring-offset-4 ring-offset-red-300'}
@@ -237,6 +241,7 @@
 						<Input
 							bind:value={targetAudience}
 							on:input={validateInput}
+							on:mouseover={validateInput}
 							class={isValidInput || !message.includes('Target Audience')
 								? 'font-medium'
 								: 'font-medium  ring ring-red-500 ring-offset-4 ring-offset-red-300'}
