@@ -15,7 +15,6 @@
 - **Google AI Integration**: An interesting feature of this application is the use of Google AI for generating questions and verifying the authenticity of the feedback. This ensures that the questions are relevant and the feedback received is genuine.
 
 This project, therefore, serves as a comprehensive feedback system for brands, helping them understand their users better and make informed decisions. It also rewards users for their participation, ensuring a win-win situation for all parties involved.
-```
 
 ### Prerequisites
 
