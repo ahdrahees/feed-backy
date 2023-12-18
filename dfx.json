@@ -1,9 +1,23 @@
 {
 	"canisters": {
+		"internet_identity": {
+			"type": "custom",
+			"shrink": false,
+			"candid": "https://github.com/dfinity/internet-identity/releases/download/release-2023-09-08/internet_identity.did",
+			"wasm": "https://github.com/dfinity/internet-identity/releases/download/release-2023-09-08/internet_identity_dev.wasm.gz"
+		},
+		"backend": {
+			"type": "motoko",
+			"main": "src/backend/main.mo",
+			"declarations": {
+				"output": "src/declarations",
+				"node_compatibility": true
+			}
+		},
 		"frontend": {
 			"type": "assets",
 			"source": ["build/"],
-
+			"dependencies": ["backend"],
 			"frontend": {
 				"entrypoint": "build/index.html"
 			}
@@ -11,7 +25,7 @@
 	},
 	"defaults": {
 		"build": {
-			"packtool": ""
+			"packtool": "mops sources"
 		}
 	}
 }

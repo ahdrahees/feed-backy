@@ -1,15 +1,15 @@
 import { AnonymousIdentity } from '@dfinity/agent';
 import { AuthClient } from '@dfinity/auth-client';
 import { writable, type Readable } from 'svelte/store';
-import type { Identity } from '@dfinity/agent';
-
-let authClient: AuthClient | null | undefined;
-
-let anonIdentity = new AnonymousIdentity();
+import type { ActorSubclass, Identity } from '@dfinity/agent';
+import type { _SERVICE } from '../declarations/backend.did';
+import { getActor } from './actor';
+import { navigateAfterLogin } from './navigation';
 
 export interface IdentityData {
 	isAuthenticated: boolean;
 	identity: Identity;
+	actor: ActorSubclass<_SERVICE>;
 }
 
 export interface AuthMethods extends Readable<IdentityData> {
@@ -18,10 +18,16 @@ export interface AuthMethods extends Readable<IdentityData> {
 	signOut: () => Promise<void>;
 }
 
+let authClient: AuthClient | null | undefined;
+
+let anonIdentity = new AnonymousIdentity();
+let anonActor: ActorSubclass<_SERVICE> = await getActor(anonIdentity);
+
 const init = async (): Promise<AuthMethods> => {
 	const { subscribe, set } = writable<IdentityData>({
 		isAuthenticated: false,
-		identity: new AnonymousIdentity()
+		identity: new AnonymousIdentity(),
+		actor: anonActor
 	});
 
 	return {
@@ -40,16 +46,17 @@ const init = async (): Promise<AuthMethods> => {
 					'\n signIdentity = ',
 					signIdentity.getPrincipal()
 				);
-				// const authActor = await getActor(signIdentity);
+				const authenticatedIdentityConnectedActor = await getActor(signIdentity);
 
 				set({
 					isAuthenticated,
-					identity: signIdentity
+					identity: signIdentity,
+					actor: authenticatedIdentityConnectedActor
 				});
 
 				return;
 			}
-			set({ isAuthenticated, identity: anonIdentity });
+			set({ isAuthenticated, identity: anonIdentity, actor: anonActor });
 		},
 
 		signIn: async () =>
@@ -58,13 +65,13 @@ const init = async (): Promise<AuthMethods> => {
 
 				const identityProvider =
 					import.meta.env.MODE == 'development'
-						? `https://identity.internetcomputer.org/`
+						? `http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080`
 						: `https://identity.internetcomputer.org/`;
 
 				await authClient?.login({
 					onSuccess: async () => {
 						await sync();
-
+						await navigateAfterLogin();
 						resolve();
 					},
 					onError: reject,
@@ -74,12 +81,11 @@ const init = async (): Promise<AuthMethods> => {
 
 		signOut: async () => {
 			const client: AuthClient = authClient ?? (await AuthClient.create());
-
 			await client.logout();
 
 			// This fix a "sign in -> sign out -> sign in again" flow without window reload.
 			authClient = null;
-			set({ isAuthenticated: false, identity: anonIdentity });
+			set({ isAuthenticated: false, identity: anonIdentity, actor: anonActor });
 		}
 	};
 };

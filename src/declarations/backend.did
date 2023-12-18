@@ -1,0 +1,246 @@
+type UserFeedbacksResult = 
+ variant {
+   err: Error;
+   ok: vec Feedback;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: BrandBasicInfo;
+ };
+type Registration = 
+ variant {
+   Brand: BrandRegisterArg;
+   User: text;
+ };
+type RegisterResult = 
+ variant {
+   err: text;
+   ok;
+ };
+type QueryUserResult = 
+ variant {
+   err: Error;
+   ok: QueryUser;
+ };
+type QueryUser = 
+ record {
+   balance: nat;
+   id: nat;
+   lastFeedback: int;
+   name: text;
+   "principal": text;
+   totalFeedback: nat;
+ };
+type QueryPostResult = 
+ variant {
+   err: Error;
+   ok: QueryPost;
+ };
+type QueryPost = 
+ record {
+   brandName: text;
+   created: int;
+   filledspot: nat;
+   owner: text;
+   postId: nat;
+   question: vec text;
+   rewardLeft: nat;
+   spotLeft: nat;
+   totalspot: nat;
+ };
+type QueryBrandResult = 
+ variant {
+   err: QueryBrandError;
+   ok: QueryBrand;
+ };
+type QueryBrandError = 
+ variant {
+   AnonymousNotAllowed;
+   BrandNotFound;
+   NotABrandOwner;
+   OwnerNotFound;
+   PostNotFound;
+   TimeRemaining: int;
+   UserNotFound;
+ };
+type QueryBrand = 
+ record {
+   balance: nat;
+   id: nat;
+   industry: text;
+   lastPost: int;
+   name: text;
+   "principal": text;
+   productOrServiceCategory: text;
+   targetAudience: text;
+   totalPosts: nat;
+ };
+type PostResult = 
+ variant {
+   err: PostError;
+   ok;
+ };
+type PostId = nat;
+type PostError = 
+ variant {
+   AnonymousNotAllowed;
+   BrandNotFound;
+   LowBalance: nat;
+   OwnerNotFound;
+   PostNotFound;
+   Reward_Should_Above_10;
+   TimeRemaining: int;
+   UserNotFound;
+ };
+type PostAndFeedbacksError = 
+ variant {
+   AnonymousNotAllowed;
+   BrandNotFound;
+   NotABrandOwner;
+   OwnerNotFound;
+   PostBelongsTo: record {
+                    PostId;
+                    text;
+                  };
+   PostNotFound;
+   TimeRemaining: int;
+   UserNotFound;
+ };
+type PostAndFeedbacks = 
+ record {
+   feedbacks: vec Feedback;
+   post: QueryPost;
+ };
+type FeedbackResult = 
+ variant {
+   err: FeedbackError;
+   ok;
+ };
+type FeedbackId__1 = nat;
+type FeedbackId = nat;
+type FeedbackError = 
+ variant {
+   AlreadyFeedbacked;
+   AnonymousNotAllowed;
+   BrandNotFound;
+   NoSpotLeft;
+   OwnerNotFound;
+   PostNotFound;
+   TimeRemaining: int;
+   UserNotFound;
+ };
+type FeedbackAndPost = 
+ record {
+   feedback: Feedback;
+   post: QueryPost;
+ };
+type Feedback = 
+ record {
+   created: int;
+   feedback: vec text;
+   feedbackId: FeedbackId;
+   isAIvalidationPass: bool;
+   postId: nat;
+   userName: text;
+ };
+type Error = 
+ variant {
+   AnonymousNotAllowed;
+   BrandNotFound;
+   OwnerNotFound;
+   PostNotFound;
+   TimeRemaining: int;
+   UserNotFound;
+ };
+type BrandRegisterArg = 
+ record {
+   brandName: text;
+   industry: text;
+   productOrServiceCategory: text;
+   targetAudience: text;
+ };
+type BrandPostsResult = 
+ variant {
+   err: Error;
+   ok: vec QueryPost;
+ };
+type BrandBasicInfo = 
+ record {
+   brandName: text;
+   industry: text;
+   productOrServiceCategory: text;
+   targetAudience: text;
+ };
+type AllUnfilledPostsResult = 
+ variant {
+   err: Error;
+   ok: vec QueryPost;
+ };
+type AllPostAndFeedbacksResult = 
+ variant {
+   err: PostAndFeedbacksError;
+   ok: vec PostAndFeedbacks;
+ };
+type AllOpenPostsResult = 
+ variant {
+   err: Error;
+   ok: vec QueryPost;
+ };
+type AllFeedbackAndPostResult = 
+ variant {
+   err: Error;
+   ok: vec FeedbackAndPost;
+ };
+type AllClosedPostsResult = 
+ variant {
+   err: Error;
+   ok: vec QueryPost;
+ };
+type APostAndFeedbacksResult = 
+ variant {
+   err: PostAndFeedbacksError;
+   ok: PostAndFeedbacks;
+ };
+type AFeedbackAndPostResult = 
+ variant {
+   err:
+    variant {
+      AnonymousNotAllowed;
+      BrandNotFound;
+      FeedbackNotInYourList;
+      OwnerNotFound;
+      PostNotFound;
+      TimeRemaining: int;
+      UserNotFound;
+    };
+   ok: FeedbackAndPost;
+ };
+service : {
+  addBalance: (nat) -> (Result_1);
+  checkMyBalance: () -> (nat) query;
+  checkUserType: () -> (text) query;
+  getAFeedbackAndPost: (FeedbackId__1) -> (AFeedbackAndPostResult) query;
+  getAPostAndFeedbacks: (nat) -> (APostAndFeedbacksResult) query;
+  getAllClosedPosts: () -> (AllClosedPostsResult) query;
+  getAllFeedbackAndPost: () -> (AllFeedbackAndPostResult) query;
+  getAllOpenPosts: () -> (AllOpenPostsResult) query;
+  getAllPostAndFeedbacks: () -> (AllPostAndFeedbacksResult) query;
+  getAllUnfilledPosts: () -> (AllUnfilledPostsResult) query;
+  getBrandBasicInfo: () -> (Result) query;
+  getFeedbacksByUser: () -> (UserFeedbacksResult) query;
+  getPost: (nat) -> (QueryPostResult) query;
+  getPostsByBrand: () -> (BrandPostsResult) query;
+  post: (vec text, nat) -> (PostResult);
+  postfeedback: (nat, vec text, bool) -> (FeedbackResult);
+  queryBrand: () -> (QueryBrandResult) query;
+  queryUser: () -> (QueryUserResult) query;
+  register: (Registration) -> (RegisterResult);
+  registerBrand: (BrandRegisterArg) -> (RegisterResult);
+  registerUser: (text) -> (RegisterResult);
+}
