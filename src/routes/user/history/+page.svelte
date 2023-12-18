@@ -9,10 +9,11 @@
 
 	async function getHistory() {
 		const result = await getAllFeedbackAndPost();
-		console.log(result);
+
 		if ('ok' in result) {
 			feedbackAndPost = result.ok;
 		} else if ('err' in result) {
+			console.log(result.err);
 			feedbackAndPost = [];
 		}
 	}

@@ -95,8 +95,7 @@
 		});
 
 		const response = result.response;
-		console.log(response.text());
-		console.log(containsTrue(response.text()), typeof containsTrue(response.text()));
+
 		return containsTrue(response.text());
 	}
 
@@ -148,7 +147,6 @@
 						class="my-3 w-fit"
 						color="purpleToPink"
 						on:click={async () => {
-							console.log(feedbacks);
 							await giveFeedback();
 						}}
 						>Feedback

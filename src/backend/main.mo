@@ -255,7 +255,10 @@ actor {
 			case (null) { #err(#UserNotFound) };
 			case (?brand) {
 				if (amount < 10) { return #err(#Reward_Should_Above_10) };
-				if (List.size(brand.postList) == 0) {
+
+				if (brand.balance < amount) {
+					#err(#LowBalance(brand.balance));
+				} else {
 					postCount += 1;
 					let newPost : Post = {
 						postId = postCount;
@@ -263,44 +266,21 @@ actor {
 						owner = brand.owner;
 						brandName = brand.name;
 						question = text;
-						var reward : Nat = 10000;
+						var reward = amount;
 						var feedbackList = List.nil<FeedbackId>();
-						var status = #Open;
+						var status = #Open
+
 					};
 					Map.set(postMap, nhash, newPost.postId, newPost);
 
 					// brandmap update method 1 if type is Brand    (brand mutation)
+					brand.balance := brand.balance - amount;
 					brand.lastPost := newPost.created;
 					brand.postList := List.push(newPost.postId, brand.postList);
 
-					#ok()
-
-				} else {
-					if (brand.balance < amount) {
-						#err(#LowBalance(brand.balance));
-					} else {
-						postCount += 1;
-						let newPost : Post = {
-							postId = postCount;
-							created = Time.now();
-							owner = brand.owner;
-							brandName = brand.name;
-							question = text;
-							var reward = amount;
-							var feedbackList = List.nil<FeedbackId>();
-							var status = #Open
-
-						};
-						Map.set(postMap, nhash, newPost.postId, newPost);
-
-						// brandmap update method 1 if type is Brand    (brand mutation)
-						brand.balance := brand.balance - amount;
-						brand.lastPost := newPost.created;
-						brand.postList := List.push(newPost.postId, brand.postList);
-
-						#ok();
-					};
+					#ok();
 				};
+
 			};
 		};
 	};

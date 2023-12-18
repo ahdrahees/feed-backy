@@ -40,12 +40,6 @@ const init = async (): Promise<AuthMethods> => {
 			if (isAuthenticated) {
 				const signIdentity: Identity = authClient.getIdentity();
 
-				console.log(
-					'isAuthenticated = ',
-					isAuthenticated,
-					'\n signIdentity = ',
-					signIdentity.getPrincipal()
-				);
 				const authenticatedIdentityConnectedActor = await getActor(signIdentity);
 
 				set({

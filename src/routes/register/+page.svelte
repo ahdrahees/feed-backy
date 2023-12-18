@@ -98,7 +98,6 @@
 			}
 
 			arg = { Brand: brandRegisterArg };
-			console.log(brandRegisterArg);
 		} else if (selectedRegistrationType === 'User') {
 			if (userName.length < 6) {
 				alert('Please fill atleast 6 characters');
@@ -123,6 +122,7 @@
 				goto('/register');
 			}
 		} else if ('err' in result) {
+			console.log(result.err);
 			alert('Error: ' + result.err);
 		}
 		registerWait = false;

@@ -26,6 +26,7 @@
 			post = result.ok.post;
 			feedbacks = result.ok.feedbacks;
 		} else if ('err' in result) {
+			console.log(result.err);
 			feedbacks = [];
 			post = {
 				created: BigInt(0),

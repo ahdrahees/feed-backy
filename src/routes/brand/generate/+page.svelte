@@ -73,16 +73,15 @@
 		} else {
 			questionsInput = [];
 		}
-		console.log(questionsInput);
 	}
 
 	async function getBasicInfo() {
 		const result = await getBrandBasicInfo();
 
-		console.log(' getBasicInfo result');
 		if ('ok' in result) {
 			brandBasicInfo = result.ok;
 		} else if ('err' in result) {
+			console.log(result.err);
 			brandBasicInfo = {
 				productOrServiceCategory: '',
 				targetAudience: '',
@@ -163,6 +162,7 @@
 		if ('ok' in result) {
 			goto('/brand');
 		} else if ('err' in result) {
+			console.log(result.err);
 			// if ('LowBalance' in result.err) {
 			// 	alert('Post Error : LowBalance' + result.err.LowBalance.toString());
 			alert('Post Error : ' + result.err);

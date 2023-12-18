@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { addBalance, checkMyBalance, getPostsByBrand, queryBrand } from '$lib/api';
 	import { authMethods } from '$lib/auth.store';
-	import { Input, InputAddon, Button, ButtonGroup, GradientButton } from 'flowbite-svelte';
+	import { GradientButton } from 'flowbite-svelte';
 	import { Card, Badge, Accordion, AccordionItem, Spinner } from 'flowbite-svelte';
 	import { ArrowRightOutline } from 'flowbite-svelte-icons';
 	import { onMount } from 'svelte';
@@ -9,7 +9,6 @@
 	import { postIdMemory } from '../../stores/post-memory';
 	import { goto } from '$app/navigation';
 	import { convertNanosecondsToReadableDate } from '../../stores/unix-to-date';
-	import { Diamonds } from 'svelte-loading-spinners';
 
 	let amount: bigint;
 	let balance: string = '';
@@ -36,6 +35,7 @@
 		if ('err' in result) {
 			await updateBalance();
 			alert('Error : ' + result.err);
+			console.log(result.err);
 		} else if ('ok' in result) {
 			await updateBalance();
 		}
@@ -52,10 +52,11 @@
 
 	async function getMyAllposts() {
 		const result = await getPostsByBrand();
-		console.log(result);
+
 		if ('ok' in result) {
 			allMyPosts = result.ok;
 		} else if ('err' in result) {
+			console.log(result.err);
 			allMyPosts = [];
 		}
 	}
@@ -66,6 +67,7 @@
 		if ('ok' in result) {
 			myInfo = result.ok;
 		} else if ('err' in result) {
+			console.log(result.err);
 			myInfo = {
 				id: BigInt(0),
 				balance: BigInt(0),
@@ -117,7 +119,6 @@
 				<div class="mb-3">
 					<Badge large border>Balance</Badge>
 					<span class="font-medium px-2">{(balance = myInfo.balance.toString())}</span>
-					<Button class="" on:click={async () => await updateBalance()} color="blue" pill>⭮</Button>
 				</div>
 				<div class="mb-3">
 					<Badge large color="indigo">Total Posts</Badge>

@@ -47,7 +47,6 @@
 		} else {
 			questionsInput = [];
 		}
-		console.log(questionsInput);
 	}
 
 	async function newPost() {
@@ -97,6 +96,7 @@
 		if ('ok' in result) {
 			goto('/brand');
 		} else if ('err' in result) {
+			console.log(result.err);
 			// if ('LowBalance' in result.err) {
 			// 	alert('Post Error : LowBalance' + result.err.LowBalance.toString());
 			alert('Post Error : ' + result.err);

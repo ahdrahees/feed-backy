@@ -13,7 +13,6 @@
 	async function getUnfilledPosts() {
 		const result = await getAllUnfilledPosts();
 		if ('ok' in result) {
-			console.log(result.ok);
 			posts = result.ok;
 		} else if ('err' in result) {
 			console.log(result.err);
