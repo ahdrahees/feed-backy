@@ -54,9 +54,9 @@ Begin by opening a terminal window.
 Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
 
 **Installing Motoko Packages**: Run the following command to install Motoko Packages:
-    ```bash
+ ```
     mops install
-    ```
+ ```
 
 **Deploy the Local Internet Identity**: Run the following command to deploy the local Internet Identity:
 
