@@ -210,7 +210,7 @@
 								? 'font-medium'
 								: 'font-medium  ring ring-red-500 ring-offset-4 ring-offset-red-300'}
 							id="default-input"
-							placeholder="Brand Name"
+							placeholder="Industry / Vertical"
 						/>
 					</div>
 					<div class="mb-6">
@@ -228,7 +228,7 @@
 								? 'font-medium'
 								: 'font-medium  ring ring-red-500 ring-offset-4 ring-offset-red-300'}
 							id="default-input"
-							placeholder="Brand Name"
+							placeholder="Product / Service Category"
 						/>
 					</div>
 					<div class="mb-6">
@@ -246,7 +246,7 @@
 								? 'font-medium'
 								: 'font-medium  ring ring-red-500 ring-offset-4 ring-offset-red-300'}
 							id="default-input"
-							placeholder="Brand Name"
+							placeholder="Target Audience"
 						/>
 					</div>
 					<div class="text-red-500">
