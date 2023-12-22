@@ -2,7 +2,15 @@
 	import '../../app.pcss';
 
 	import { authMethods } from '$lib/auth.store';
-	import { Navbar, NavBrand, NavLi, NavUl, NavHamburger } from 'flowbite-svelte';
+	import {
+		Navbar,
+		NavBrand,
+		NavLi,
+		NavUl,
+		NavHamburger,
+		GradientButton,
+		Button
+	} from 'flowbite-svelte';
 
 	async function callsignOut() {
 		await authMethods.signOut();
@@ -33,20 +41,29 @@
 	</NavBrand>
 	<NavHamburger />
 	<NavUl>
-		<NavLi href="/brand">Home</NavLi>
-		<NavLi
-			href="/brand/generate"
-			class="font-medium bg-gradient-to-r from-[#6000ff] via-[#00d6a8] to-[#a66fff] inline-block text-transparent bg-clip-text"
-			>Generate Post with AI</NavLi
+		<NavLi href="/brand"
+			><Button class="border-0 bg-transparent px-0 hover:bg-transparent" color="alternative"
+				>Home</Button
+			></NavLi
 		>
-		<NavLi href="/brand/newpost">Create new post</NavLi>
+		<NavLi href="/brand/generate"
+			><Button
+				class="border-0 bg-transparent px-0 hover:bg-transparent font-medium bg-gradient-to-r from-[#6000ff] via-[#00d6a8] to-[#a66fff] inline-block text-transparent bg-clip-text"
+				color="alternative">Generate Post with AI</Button
+			></NavLi
+		>
+		<NavLi href="/brand/newpost"
+			><Button class="border-0 bg-transparent px-0 hover:bg-transparent" color="alternative"
+				>Create new post</Button
+			></NavLi
+		>
 		{#if $authMethods.isAuthenticated}
 			<NavLi on:click={async () => await authMethods.signOut()}
-				><p style="color:red">Log out</p></NavLi
+				><GradientButton color="red">Log out</GradientButton></NavLi
 			>
 		{:else}
 			<NavLi on:click={async () => await authMethods.signIn()}
-				><p style="color:blue;">Log in</p></NavLi
+				><GradientButton color="blue">Log in</GradientButton></NavLi
 			>
 		{/if}
 	</NavUl>

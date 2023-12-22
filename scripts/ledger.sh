@@ -23,7 +23,7 @@ NUM_OF_BLOCK_TO_ARCHIVE=1000
 CYCLE_FOR_ARCHIVE_CREATION=10000000000000
 FEATURE_FLAGS=true
 
-dfx deploy icrc1_ledger --specified-id mxzaz-hqaaa-aaaar-qaada-cai --argument "(variant {Init = 
+dfx deploy icrc1_ledger  --argument "(variant {Init = 
 record {
      token_symbol = \"${TOKEN_SYMBOL}\";
      token_name = \"${TOKEN_NAME}\";

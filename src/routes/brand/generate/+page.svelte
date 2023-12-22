@@ -258,10 +258,10 @@
 	<BreadcrumbItem href="/brand" home>Home</BreadcrumbItem>
 	<BreadcrumbItem>Generate Post</BreadcrumbItem>
 </Breadcrumb>
-<div class="gradiant flex justify-center items-center h-screen">
+<div class="gradiant flex justify-center items-start h-[100vh]">
 	{#if $authMethods.isAuthenticated}
-		<div class="flex justify-center basis-full">
-			<Card size="md" class="basis-full border-0 bg-gradient-to-r from-[#72ecd1] to-[#8d45ff]">
+		<div class="flex justify-center basis-full flex-wrap gradiant h-[auto]">
+			<Card size="md" class="m-10 basis-full border-0 bg-gradient-to-r from-[#72ecd1] to-[#8d45ff]">
 				<h5
 					class="mb-2 text-center text-2xl font-bold tracking-tight text-gray-900 dark:text-white"
 				>
@@ -341,7 +341,7 @@
 				{/if}
 			</Card>
 			{#if enableQuestionTextArea}
-				<Card size="md" class="w-full ml-10 bg-[#e3d2ff]">
+				<Card size="md" class="w-full m-10 bg-[#e3d2ff]">
 					{#each genQuestions as question, index}
 						<div class="mb-6">
 							<Badge large class="font-semibold mb-2" rounded color="purple"
