@@ -1,4 +1,4 @@
-# [Feedbacky Project](https://fzxj3-4qaaa-aaaao-agzya-cai.icp0.io/)
+# Feedbacky Project
 
 ## Overview
 
@@ -62,7 +62,10 @@ Once you've created a project and installed dependencies with `npm install` (or 
     ```
     npm run localii
     ```
-
+**Deploy the Local ICP Ledger Canister**: Run the following command to deploy the ICP Ledger Caniter:
+```
+    npm run localicpledger
+```
 **Deploy the Backend**: Follow the instructions in the backend README to deploy the backend.
 
 **Deploy the Frontend**: Follow the instructions in the frontend README to deploy the frontend.
