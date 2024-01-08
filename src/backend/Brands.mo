@@ -10,6 +10,7 @@ import Map "mo:map/Map";
 import T "Types";
 import Constants "Constants";
 import U "Utils";
+import IcpLedgerInterface "service/icp-ledger-interface";
 
 module {
 	// Types
@@ -35,16 +36,16 @@ module {
 		};
 	};
 
-	public func queryBrand(brandMap : BrandMap, caller : Principal) : QueryBrandResult {
+	public func queryBrand(brandMap : BrandMap, caller : Principal, canisterId : Principal) : QueryBrandResult {
 		switch (Map.get(brandMap, phash, caller)) {
 			case (null) { #err(#BrandNotFound) };
 			case (?brand) {
 				if (not (caller == brand.owner)) return #err(#NotABrandOwner);
-				let _queryBrand : QueryBrand = {
+				let _queryBrand : T.QueryBrand = {
 					id = brand.id;
 					principal = Principal.toText(brand.owner);
 					name = brand.name;
-					balance = brand.balance;
+					account = U.toAccount(canisterId, (10 + brand.id));
 					lastPost = brand.lastPost;
 					totalPosts = List.size<PostId>(brand.postList);
 

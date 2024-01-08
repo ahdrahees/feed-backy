@@ -1,21 +1,27 @@
 <script lang="ts">
-	import { addBalance, checkMyBalance, getPostsByBrand, queryBrand } from '$lib/api';
+	import { getPostsByBrand, icpAccountAddress, icpBalanceOf, queryBrand } from '$lib/api';
 	import { authMethods } from '$lib/auth.store';
 	import { GradientButton } from 'flowbite-svelte';
 	import { Card, Badge, Accordion, AccordionItem, Spinner } from 'flowbite-svelte';
 	import { ArrowRightOutline } from 'flowbite-svelte-icons';
-	import { onMount } from 'svelte';
-	import type { QueryBrand, QueryPost } from '../../declarations/backend.did';
+	import type { Account, QueryBrand, QueryPost } from '../../declarations/backend.did';
 	import { postIdMemory } from '../../stores/post-memory';
 	import { goto } from '$app/navigation';
 	import { convertNanosecondsToReadableDate } from '../../stores/unix-to-date';
+	import { getICPLedgerActor } from '$lib/actor';
+	import type { AccountIdentifier } from '../../declarations/icp_ledger_canister/icp_ledger_canister.did';
+	import { AnonymousIdentity } from '@dfinity/agent';
+	import { Copy } from '@dfinity/gix-components';
 
-	let amount: bigint;
-	let balance: string = '';
+	type SubAccount = Uint8Array | number[];
+
+	let balance: BigInt = BigInt(0);
 	let allMyPosts: Array<QueryPost> = [];
-	let myInfo: QueryBrand = {
+	let account: Account;
+
+	type MyInfo = Omit<QueryBrand, 'account'>;
+	let myInfo: MyInfo = {
 		id: BigInt(0),
-		balance: BigInt(0),
 		principal: '',
 		name: '',
 		totalPosts: BigInt(0),
@@ -25,30 +31,7 @@
 		targetAudience: ''
 	};
 
-	let addbalanceWait = false;
-	async function callAddbalance() {
-		addbalanceWait = true;
-
-		let add = BigInt(amount);
-		let result = await addBalance(add);
-
-		if ('err' in result) {
-			await updateBalance();
-			alert('Error : ' + result.err);
-			console.log(result.err);
-		} else if ('ok' in result) {
-			await updateBalance();
-		}
-
-		addbalanceWait = false;
-	}
-
-	onMount(async () => {
-		await updateBalance();
-	});
-	async function updateBalance() {
-		balance = (await checkMyBalance()).toString();
-	}
+	let icpWalletAddress = '';
 
 	async function getMyAllposts() {
 		const result = await getPostsByBrand();
@@ -66,11 +49,13 @@
 
 		if ('ok' in result) {
 			myInfo = result.ok;
+			account = result.ok.account;
+			await getIcpBalance();
+			await getIcpAddress();
 		} else if ('err' in result) {
 			console.log(result.err);
 			myInfo = {
 				id: BigInt(0),
-				balance: BigInt(0),
 				principal: '',
 				name: '',
 				totalPosts: BigInt(0),
@@ -85,6 +70,35 @@
 	function forwardToPostInfoPage(postId: bigint) {
 		postIdMemory.update((value) => (value = postId));
 		goto('/brand/postInfo');
+	}
+
+	const toHexString = (subAccount: SubAccount) => {
+		return Array.from(subAccount, function (byte) {
+			return ('0' + (byte & 0xff).toString(16)).slice(-2);
+		}).join('');
+	};
+
+	// async function getBalanceAndWalletAddress(account: Account) {
+	// 	// const authenticatedIdentityConnectedIcpLedger  = await getICPLedgerActor($authMethods.identity);
+	// 	const icpLedgerActor = await getICPLedgerActor($authMethods.identity);
+
+	// 	balance = await icpLedgerActor.icrc1_balance_of(account);
+	// 	let address: AccountIdentifier = await icpLedgerActor.account_identifier(account);
+	// 	icpWalletAddress = toHexString(address);
+	// }
+
+	async function getIcpBalance() {
+		balance = await icpBalanceOf(account);
+	}
+	async function getIcpAddress() {
+		icpWalletAddress = toHexString(await icpAccountAddress(account));
+	}
+
+	function shortenWalletAddress(address: string) {
+		const firstSixChars = address.slice(0, 8);
+		const lastFourChars = address.slice(-7);
+		const middleEllipsis = '...';
+		return firstSixChars + middleEllipsis + lastFourChars;
 	}
 </script>
 
@@ -114,11 +128,22 @@
 				</div>
 				<div class="mb-3">
 					<Badge large color="green">Principal</Badge>
-					<span class="font-medium px-2">{myInfo.principal}</span>
+					<span class="font-medium px-2"
+						>{shortenWalletAddress(myInfo.principal)}<Copy value={myInfo.principal} /></span
+					>
+				</div>
+				<div class="mb-3">
+					<Badge large color="green">ICP Wallet</Badge>
+					<span class="font-medium px-2"
+						>{shortenWalletAddress(icpWalletAddress)} <Copy value={icpWalletAddress} /></span
+					>
 				</div>
 				<div class="mb-3">
 					<Badge large border>Balance</Badge>
-					<span class="font-medium px-2">{(balance = myInfo.balance.toString())}</span>
+					<span class="font-medium px-2"
+						>{(Number(balance) / 10 ** 8).toString()}
+						<span class="text-red-500">{' ICP'}</span></span
+					>
 				</div>
 				<div class="mb-3">
 					<Badge large color="indigo">Total Posts</Badge>

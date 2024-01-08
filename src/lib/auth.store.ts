@@ -3,13 +3,16 @@ import { AuthClient } from '@dfinity/auth-client';
 import { writable, type Readable } from 'svelte/store';
 import type { ActorSubclass, Identity } from '@dfinity/agent';
 import type { _SERVICE } from '../declarations/backend.did';
-import { getActor } from './actor';
+import type { _SERVICE as IcpLedger_SERVICE } from '../declarations/icp_ledger_canister/icp_ledger_canister.did';
+
+import { getActor, getICPLedgerActor } from './actor';
 import { navigateAfterLogin } from './navigation';
 
 export interface IdentityData {
 	isAuthenticated: boolean;
 	identity: Identity;
 	actor: ActorSubclass<_SERVICE>;
+	icpLedger: ActorSubclass<IcpLedger_SERVICE>;
 }
 
 export interface AuthMethods extends Readable<IdentityData> {
@@ -22,12 +25,14 @@ let authClient: AuthClient | null | undefined;
 
 let anonIdentity = new AnonymousIdentity();
 let anonActor: ActorSubclass<_SERVICE> = await getActor(anonIdentity);
+let anonIcpLedger: ActorSubclass<IcpLedger_SERVICE> = await getICPLedgerActor(anonIdentity);
 
 const init = async (): Promise<AuthMethods> => {
 	const { subscribe, set } = writable<IdentityData>({
 		isAuthenticated: false,
 		identity: new AnonymousIdentity(),
-		actor: anonActor
+		actor: anonActor,
+		icpLedger: anonIcpLedger
 	});
 
 	return {
@@ -41,16 +46,18 @@ const init = async (): Promise<AuthMethods> => {
 				const signIdentity: Identity = authClient.getIdentity();
 
 				const authenticatedIdentityConnectedActor = await getActor(signIdentity);
+				const authenticatedIdentityConnectedIcpLedger = await getICPLedgerActor(signIdentity);
 
 				set({
 					isAuthenticated,
 					identity: signIdentity,
-					actor: authenticatedIdentityConnectedActor
+					actor: authenticatedIdentityConnectedActor,
+					icpLedger: authenticatedIdentityConnectedIcpLedger
 				});
 
 				return;
 			}
-			set({ isAuthenticated, identity: anonIdentity, actor: anonActor });
+			set({ isAuthenticated, identity: anonIdentity, actor: anonActor, icpLedger: anonIcpLedger });
 		},
 
 		signIn: async () =>
@@ -79,7 +86,12 @@ const init = async (): Promise<AuthMethods> => {
 
 			// This fix a "sign in -> sign out -> sign in again" flow without window reload.
 			authClient = null;
-			set({ isAuthenticated: false, identity: anonIdentity, actor: anonActor });
+			set({
+				isAuthenticated: false,
+				identity: anonIdentity,
+				actor: anonActor,
+				icpLedger: anonIcpLedger
+			});
 		}
 	};
 };

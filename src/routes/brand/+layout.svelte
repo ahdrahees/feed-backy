@@ -57,6 +57,11 @@
 				>Create new post</Button
 			></NavLi
 		>
+		<NavLi href="/brand/wallet"
+			><Button class="border-0 bg-transparent px-0 hover:bg-transparent" color="alternative"
+				>Wallet</Button
+			></NavLi
+		>
 		{#if $authMethods.isAuthenticated}
 			<NavLi on:click={async () => await authMethods.signOut()}
 				><GradientButton color="red">Log out</GradientButton></NavLi

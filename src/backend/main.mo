@@ -5,9 +5,16 @@ import Iter "mo:base/Iter";
 import Principal "mo:base/Principal";
 import Time "mo:base/Time";
 import Result "mo:base/Result";
+import Nat8 "mo:base/Nat8";
+import Blob "mo:base/Blob";
+import Text "mo:base/Text";
+import Float "mo:base/Float";
+import Nat64 "mo:base/Nat64";
+import Nat "mo:base/Nat";
 
 // mops - map
 import Map "mo:map/Map";
+import StableBuffer "mo:StableBuffer/StableBuffer";
 
 import T "Types";
 import Constants "Constants";
@@ -15,7 +22,12 @@ import U "Utils";
 import Brands "Brands";
 import Feedbacks "Feedbacks";
 
-actor {
+// import icp_ledger_canister "canister:icp_ledger_canister";
+import IcpLedgerInterface "service/icp-ledger-interface";
+
+// import service "ic:ryjl3-tyaaa-aaaaa-aaaba-cai";
+
+actor feedbacky {
 	// Types
 	type Brand = T.Brand;
 	type Post = T.Post;
@@ -33,9 +45,11 @@ actor {
 	type FeedbackId = T.FeedbackId;
 	type QueryPostResult = T.QueryPostResult;
 	type QueryBrandResult = T.QueryBrandResult;
+	type TransferResult = Result.Result<Nat64, Text>;
 
 	// Variables
 	let { phash; nhash } = Map;
+	let icpLedgerCanister : IcpLedgerInterface.Self = actor ("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
 	// Stable Variables
 	stable var brandCount : Nat = 0;
@@ -52,6 +66,8 @@ actor {
 
 	stable var closedPostList : List.List<PostId> = List.nil<PostId>();
 
+	stable let withdrawHistoryMap : T.WithdrawHistoryMap = Map.new(phash);
+
 	// brand
 	public shared ({ caller }) func registerBrand(
 		args : T.BrandRegisterArg
@@ -62,10 +78,10 @@ actor {
 	};
 
 	// brand only
-	public shared ({ caller }) func post(questions : [Text], reward : Nat) : async PostResult {
+	public shared ({ caller }) func post(questions : [Text], feedbacksNos : Nat) : async PostResult {
 
-		if (Principal.isAnonymous(caller)) return #err(#AnonymousNotAllowed);
-		_post(brandMap, caller, postMap, questions, reward);
+		if (Principal.isAnonymous(caller)) return #err("Anonymous Not Allowed");
+		await* _post(brandMap, caller, postMap, questions, feedbacksNos);
 	};
 
 	// Anyone -- get A Post by postId
@@ -77,7 +93,8 @@ actor {
 	// brand only -- get brand details
 	public shared query ({ caller }) func queryBrand() : async QueryBrandResult {
 		if (Principal.isAnonymous(caller)) return #err(#AnonymousNotAllowed);
-		Brands.queryBrand(brandMap, caller);
+
+		Brands.queryBrand(brandMap, caller, Principal.fromActor(feedbacky));
 	};
 
 	// user
@@ -161,7 +178,7 @@ actor {
 		if (Principal.isAnonymous(caller)) return #err(#AnonymousNotAllowed);
 		Feedbacks.getAllFeedbackAndPost(userMap, postMap, feedbackMap, caller);
 	};
-	////////
+	//
 	public shared query ({ caller }) func checkUserType() : async Text {
 		switch (Map.get(registerMap, phash, caller)) {
 			case (?value) { value };
@@ -169,16 +186,11 @@ actor {
 		};
 	};
 
-	public shared query ({ caller }) func checkMyBalance() : async Nat {
+	// user only
+	public shared ({ caller }) func checkMyBalance() : async Nat {
 		switch (Map.get(registerMap, phash, caller)) {
 			case (?"User") {
 				switch (Map.get(userMap, phash, caller)) {
-					case (?value) { value.balance };
-					case (null) { 0 };
-				};
-			};
-			case (?"Brand") {
-				switch (Map.get(brandMap, phash, caller)) {
 					case (?value) { value.balance };
 					case (null) { 0 };
 				};
@@ -188,25 +200,116 @@ actor {
 		};
 	};
 
-	public shared ({ caller }) func addBalance(add : Nat) : async T.Result<Nat, Text> {
-		return #err("Adimin only method");
-		// switch (Map.get(brandMap, phash, caller)) {
-		//     case (?value) { value.balance += add; #ok(value.balance) };
-		//     case (null) { #err("user not founc") };
-		// };
-	};
-
 	public shared query ({ caller }) func getBrandBasicInfo() : async T.Result<T.BrandBasicInfo, Text> {
 		switch (Map.get(brandMap, phash, caller)) {
-			case (?value) {
+			case (?brand) {
 				#ok({
-					brandName = value.name;
-					industry = value.industry;
-					productOrServiceCategory = value.productOrServiceCategory;
-					targetAudience = value.targetAudience;
+					brandName = brand.name;
+					industry = brand.industry;
+					productOrServiceCategory = brand.productOrServiceCategory;
+					targetAudience = brand.targetAudience;
+					account = U.toAccount(Principal.fromActor(feedbacky), (10 + brand.id));
 				});
 			};
 			case (null) { #err("Please Register as Brand") };
+		};
+	};
+
+	public shared query ({ caller }) func numberOfBrands() : async Nat {
+		Map.size(brandMap);
+	};
+
+	public shared query ({ caller }) func numberOfUsers() : async Nat {
+		Map.size(userMap);
+	};
+
+	public shared func accounts(num : Nat) : async Text {
+		let array = Array.init<Nat8>(32, 0);
+		var decimal = num;
+		var i = 0;
+
+		while (decimal > 0) {
+			array[31 -i] := Nat8.fromNat(decimal % 256);
+			decimal := decimal / 256;
+			i += 1;
+		};
+
+		let accountArg : IcpLedgerInterface.Account = {
+			owner = Principal.fromActor(feedbacky);
+			subaccount = ?Blob.fromArrayMut(array);
+		};
+		let account = await icpLedgerCanister.account_identifier(accountArg);
+
+		return U.toHex(Blob.toArray(account));
+	};
+
+	public shared ({ caller }) func transferICP(to : Blob, amount : IcpLedgerInterface.Tokens) : async TransferResult {
+		switch (Map.get(brandMap, phash, caller)) {
+			case (?brand) {
+				let transferArgs : IcpLedgerInterface.TransferArgs = {
+					to;
+					fee : IcpLedgerInterface.Tokens = {
+						e8s = 10_000 : Nat64;
+					};
+					memo : Nat64 = Nat64.fromNat(brand.id);
+					from_subaccount : ?Blob = U.toSubAccount(10 + brand.id);
+					created_at_time : ?IcpLedgerInterface.TimeStamp = ?{
+						timestamp_nanos = Nat64.fromIntWrap(Time.now()) : Nat64;
+					};
+					amount;
+				};
+				let tx_response = await icpLedgerCanister.transfer(transferArgs);
+				switch (tx_response) {
+					case (#Ok(value)) { #ok(value) };
+					case (#Err(error)) { #err("ICP transfer Error.") };
+				};
+
+			};
+			case (null) { #err("Brand only method") };
+		};
+	};
+
+	public shared ({ caller }) func withdrawRewardPoints(to : Blob) : async TransferResult {
+		switch (Map.get(userMap, phash, caller)) {
+			case (?user) {
+				let icpRewardPerFeedback : Nat64 = Nat64.fromNat(500_000);
+				let amount : IcpLedgerInterface.Tokens = {
+					e8s = (Nat64.fromNat(user.balance) / 10) * icpRewardPerFeedback : Nat64;
+				};
+				let transferArgs : IcpLedgerInterface.TransferArgs = {
+					to;
+					fee : IcpLedgerInterface.Tokens = {
+						e8s = 10_000 : Nat64;
+					};
+					memo : Nat64 = Nat64.fromNat(user.id);
+					from_subaccount : ?Blob = U.toSubAccount(0);
+					created_at_time : ?IcpLedgerInterface.TimeStamp = ?{
+						timestamp_nanos = Nat64.fromIntWrap(Time.now()) : Nat64;
+					};
+					amount;
+				};
+				let tx_response = await icpLedgerCanister.transfer(transferArgs);
+				var blockIndex : Nat64 = 0;
+				switch (tx_response) {
+					case (#Ok(value)) { blockIndex := value };
+					case (#Err(error)) { return #err("ICP transfer Error.") };
+				};
+				let withdrawPoints = user.balance;
+				user.balance := 0;
+
+				switch (Map.get(withdrawHistoryMap, phash, caller)) {
+					case (?buffer) {
+						StableBuffer.add(buffer, { blockIndex; withdrawPoints });
+					};
+					case (null) {
+						let stBuffer = StableBuffer.init<T.WithdrawHistory>();
+						StableBuffer.add(stBuffer, { blockIndex; withdrawPoints });
+						Map.set(withdrawHistoryMap, phash, caller, stBuffer);
+					};
+				};
+				#ok(blockIndex);
+			};
+			case (null) { #err("User only method") };
 		};
 	};
 
@@ -235,7 +338,6 @@ actor {
 					id = brandCount;
 					owner = _owner;
 					name = brandName;
-					var balance = 1000;
 					var lastPost = 0;
 					var postList = List.nil<PostId>();
 					industry;
@@ -250,31 +352,64 @@ actor {
 		};
 	};
 
-	private func _post(brandMap : BrandMap, _owner : Principal, postMap : PostMap, text : [Text], amount : Nat) : PostResult {
-		switch (Map.get(brandMap, phash, _owner)) {
-			case (null) { #err(#UserNotFound) };
-			case (?brand) {
-				if (amount < 10) { return #err(#Reward_Should_Above_10) };
+	private func calculatePostCostInICP(questionNos : Nat, feedbacksNos : Nat) : Nat {
+		let decimals : Nat = 10 ** 8;
+		let icpRewardPerFeedback : Nat = 500_000; // 0.005 in ICP 8 Decimals
+		let icpFeePerFeedback : Nat = 166_666; // 0.00166666 in ICP 8 Decimals
+		let icpCostPerFeedback : Nat = 666_666; // 0.00666666 in ICP 8 Decimals
 
-				if (brand.balance < amount) {
-					#err(#LowBalance(brand.balance));
+		return (questionNos * feedbacksNos * icpCostPerFeedback);
+	};
+
+	private func _post(brandMap : BrandMap, _owner : Principal, postMap : PostMap, text : [Text], feedbacksNos : Nat) : async* PostResult {
+		switch (Map.get(brandMap, phash, _owner)) {
+			case (null) { #err("User Not Found") };
+			case (?brand) {
+				if (feedbacksNos == 0) { return #err("Error: Number of Feedbacks Atleast 1") };
+				let postCostInICP : Nat = calculatePostCostInICP(text.size(), feedbacksNos);
+
+				let accountArg : IcpLedgerInterface.Account = U.toAccount(Principal.fromActor(feedbacky), (10 + brand.id));
+				let balance : Nat = await icpLedgerCanister.icrc1_balance_of(accountArg);
+
+				// amount is ICP // rewards = amount * 333 * 10 ;
+				if (balance < postCostInICP) {
+					let textBalance = Float.toText(Float.fromInt(balance) / (10 ** 8));
+					let textCost = Float.toText(Float.fromInt(postCostInICP) / (10 ** 8));
+					#err("Low Balance " # textBalance # " ICP less than post cost " # textCost # " ICP.");
 				} else {
-					postCount += 1;
+					let postId = postCount + 1;
+					let created = Time.now();
+					let transferArg : IcpLedgerInterface.TransferArg = {
+						to = U.defaultAccount(Principal.fromActor(feedbacky));
+						fee = null;
+						memo = ?Text.encodeUtf8(Nat.toText(postId));
+						from_subaccount = U.toSubAccount(10 + brand.id);
+						created_at_time = ?Nat64.fromIntWrap(created);
+						amount = postCostInICP;
+					};
+					let tx_response : IcpLedgerInterface.Result = await icpLedgerCanister.icrc1_transfer(transferArg);
+
+					var blockIndex : Nat = 0;
+					switch (tx_response) {
+						case (#Ok(value)) { blockIndex := value };
+						case (#Err(error)) { return #err("ICP transfer Error.") };
+					};
+
 					let newPost : Post = {
-						postId = postCount;
-						created = Time.now();
+						postId;
+						created;
 						owner = brand.owner;
 						brandName = brand.name;
 						question = text;
-						var reward = amount;
+						var reward = (text.size() * feedbacksNos * 10);
 						var feedbackList = List.nil<FeedbackId>();
-						var status = #Open
-
+						var status = #Open;
+						blockIndex;
 					};
-					Map.set(postMap, nhash, newPost.postId, newPost);
 
+					Map.set(postMap, nhash, newPost.postId, newPost);
+					postCount += 1;
 					// brandmap update method 1 if type is Brand    (brand mutation)
-					brand.balance := brand.balance - amount;
 					brand.lastPost := newPost.created;
 					brand.postList := List.push(newPost.postId, brand.postList);
 
@@ -318,7 +453,9 @@ actor {
 				switch (Map.get(postMap, nhash, postId)) {
 					case (null) { #err(#PostNotFound) };
 					case (?post) {
-						if (post.reward < 10) {
+						let points : Nat = post.question.size() * 10;
+
+						if (post.reward < points) {
 							post.status := #Closed(Time.now());
 							closedPostList := List.push(post.postId, closedPostList);
 							#err(#NoSpotLeft);
@@ -336,10 +473,10 @@ actor {
 
 							// post mutation
 							if (aiValidation) {
-								post.reward := post.reward - 10;
+								post.reward := post.reward - points;
 							};
 							post.feedbackList := List.push<FeedbackId>(newFeedback.feedbackId, post.feedbackList);
-							if (post.reward < 10) {
+							if (post.reward < points) {
 								post.reward := 0; // newly updated
 								post.status := #Closed(Time.now());
 								closedPostList := List.push(post.postId, closedPostList);
@@ -347,7 +484,7 @@ actor {
 
 							// user mutation
 							if (aiValidation) {
-								user.balance := user.balance + 10;
+								user.balance := user.balance + points;
 							};
 							user.lastFeedback := newFeedback.created;
 							user.feedbackList := List.push<FeedbackId>(newFeedback.feedbackId, user.feedbackList);

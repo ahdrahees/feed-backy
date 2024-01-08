@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { checkMyBalance, post } from '$lib/api';
+	import { icpBalanceOf, post, queryBrand } from '$lib/api';
 	import { authMethods } from '$lib/auth.store';
 	import { Breadcrumb, BreadcrumbItem } from 'flowbite-svelte';
 	import { Label, Select, Input, GradientButton } from 'flowbite-svelte';
 	import { SyncLoader } from 'svelte-loading-spinners';
+	import { calculatePostCostInICP } from '../../../stores/icp-cost-per-post';
+	import type { Account } from '../../../declarations/icp_ledger_canister/icp_ledger_canister.did';
+	import { onMount } from 'svelte';
 
 	type QuestionInput = {
 		placeholder: string;
@@ -20,9 +23,19 @@
 		{ value: '5', name: '5' }
 	];
 	let enablePostButton = false;
-	let rewardsInput: bigint;
+	let feedbackNos: bigint;
 
 	let postingLoading = false;
+	let icpCostPerPost = 0;
+
+	let account: Account;
+
+	onMount(async () => {
+		let result = await queryBrand();
+		if ('ok' in result) {
+			account = result.ok.account;
+		}
+	});
 
 	function calculateInputsNeeded() {
 		enablePostButton = true;
@@ -51,7 +64,7 @@
 
 	async function newPost() {
 		let questions: string[] = [];
-		let rewards: bigint;
+		let feedbackNos__: bigint;
 		if (!$authMethods.isAuthenticated) {
 			alert('Please Login with Internet Identity First');
 			return 0;
@@ -70,29 +83,40 @@
 				questions.push(questionsInput[i].userInput);
 			}
 		}
-		if (rewardsInput.toString().length < 1) {
-			alert('Please fill reward');
+		if (typeof feedbackNos === 'undefined') {
+			alert('Please fill number of feedbacks');
 			return 0;
 		}
-		if (Number(rewardsInput) < 10) {
-			alert('Reward should be 10 or greater');
+		if (feedbackNos.toString().length < 1) {
+			alert('Please fill number of feedbacks');
 			return 0;
 		}
-		if (Number(rewardsInput) % 10 !== 0) {
-			alert('Reward should be multiple of 10');
+		if (Number(feedbackNos) < 1) {
+			alert('Please fill number of feedbacks greater than or equal to 1');
+			return 0;
+		}
+		if (Number(feedbackNos) % 1 !== 0) {
+			alert('Number of feedbacks should not be decimal point. Remove ractions part');
 			return 0;
 		}
 
 		postingLoading = true;
-		let mybalance = await checkMyBalance();
-		if (mybalance < BigInt(rewardsInput)) {
-			alert('Not enough Balance');
+		let mybalance = await icpBalanceOf(account);
+		let postCostInICP = BigInt(calculatePostCostInICP(questions.length, Number(feedbackNos)));
+		if (mybalance < postCostInICP) {
+			alert(
+				'Not enough Balance. Your Balance is ' +
+					(Number(mybalance) / 10 ** 8).toString() +
+					' ICP. Post Cost is ' +
+					(Number(postCostInICP) / 10 ** 8).toString() +
+					' ICP.'
+			);
 			postingLoading = false;
 			return 0;
 		}
-		rewards = BigInt(rewardsInput);
+		feedbackNos__ = BigInt(feedbackNos);
 
-		const result = await post(questions, rewards);
+		const result = await post(questions, feedbackNos__);
 		if ('ok' in result) {
 			goto('/brand');
 		} else if ('err' in result) {
@@ -108,14 +132,23 @@
 	function validateRewardInput() {
 		const postButton = document.getElementById('post-button') as HTMLButtonElement;
 
-		if (rewardsInput.toString().length === 0) {
+		if (feedbackNos.toString().length === 0) {
 			postButton.disabled = true;
-		} else if (rewardsInput.toString().length < 1) {
+		} else if (feedbackNos.toString().length < 1) {
 			postButton.disabled = true;
-		} else if (Number(rewardsInput) < 10) {
-			Number(rewardsInput) < 10;
+		} else if (Number(feedbackNos) < 1) {
+			postButton.disabled = true;
 		}
 		postButton.disabled = false;
+	}
+
+	function updatePostCost() {
+		icpCostPerPost = calculatePostCostInICP(questionsInput.length, Number(feedbackNos)) / 10 ** 8;
+	}
+	let balance: number = 0;
+
+	async function myBalanceFN() {
+		balance = Number(await icpBalanceOf(account)) / 10 ** 8;
 	}
 </script>
 
@@ -145,14 +178,23 @@
 			{/each}
 			{#if enablePostButton}
 				<div class="mb-6">
-					<Label for="default-input" class="block mb-2">Rewards</Label>
+					<Label for="default-input" class="block mb-2">Nos Feedbacks</Label>
 					<Input
 						type="number"
 						id="default-input"
-						placeholder="Minimum 10 Rewards"
-						bind:value={rewardsInput}
+						placeholder="Minimum 1 Feedback"
+						bind:value={feedbackNos}
+						on:input={updatePostCost}
 						required
 					/>
+				</div>
+				<div class="mb-6 text-gray-600">
+					{#await myBalanceFN() then _}
+						{'Balance = ' + balance + ' ICP'}
+						<br />
+					{/await}
+					{'Post Cost + Transaction Fee (0.0001) = ' + (icpCostPerPost + 0.0001) + ' ICP'}
+					<br />
 				</div>
 				{#if postingLoading}
 					<div class="flex justify-center">

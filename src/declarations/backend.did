@@ -3,11 +3,12 @@ type UserFeedbacksResult =
    err: Error;
    ok: vec Feedback;
  };
-type Result_1 = 
+type TransferResult = 
  variant {
    err: text;
-   ok: nat;
+   ok: nat64;
  };
+type Tokens = record {e8s: nat64;};
 type Result = 
  variant {
    err: text;
@@ -44,6 +45,7 @@ type QueryPostResult =
  };
 type QueryPost = 
  record {
+   blockIndex: nat;
    brandName: text;
    created: int;
    filledspot: nat;
@@ -71,7 +73,7 @@ type QueryBrandError =
  };
 type QueryBrand = 
  record {
-   balance: nat;
+   account: Account;
    id: nat;
    industry: text;
    lastPost: int;
@@ -83,21 +85,10 @@ type QueryBrand =
  };
 type PostResult = 
  variant {
-   err: PostError;
+   err: text;
    ok;
  };
 type PostId = nat;
-type PostError = 
- variant {
-   AnonymousNotAllowed;
-   BrandNotFound;
-   LowBalance: nat;
-   OwnerNotFound;
-   PostNotFound;
-   Reward_Should_Above_10;
-   TimeRemaining: int;
-   UserNotFound;
- };
 type PostAndFeedbacksError = 
  variant {
    AnonymousNotAllowed;
@@ -172,6 +163,7 @@ type BrandPostsResult =
  };
 type BrandBasicInfo = 
  record {
+   account: Account;
    brandName: text;
    industry: text;
    productOrServiceCategory: text;
@@ -202,6 +194,11 @@ type AllClosedPostsResult =
    err: Error;
    ok: vec QueryPost;
  };
+type Account = 
+ record {
+   owner: principal;
+   subaccount: opt blob;
+ };
 type APostAndFeedbacksResult = 
  variant {
    err: PostAndFeedbacksError;
@@ -222,8 +219,8 @@ type AFeedbackAndPostResult =
    ok: FeedbackAndPost;
  };
 service : {
-  addBalance: (nat) -> (Result_1);
-  checkMyBalance: () -> (nat) query;
+  accounts: (nat) -> (text);
+  checkMyBalance: () -> (nat);
   checkUserType: () -> (text) query;
   getAFeedbackAndPost: (FeedbackId__1) -> (AFeedbackAndPostResult) query;
   getAPostAndFeedbacks: (nat) -> (APostAndFeedbacksResult) query;
@@ -236,6 +233,8 @@ service : {
   getFeedbacksByUser: () -> (UserFeedbacksResult) query;
   getPost: (nat) -> (QueryPostResult) query;
   getPostsByBrand: () -> (BrandPostsResult) query;
+  numberOfBrands: () -> (nat) query;
+  numberOfUsers: () -> (nat) query;
   post: (vec text, nat) -> (PostResult);
   postfeedback: (nat, vec text, bool) -> (FeedbackResult);
   queryBrand: () -> (QueryBrandResult) query;
@@ -243,4 +242,6 @@ service : {
   register: (Registration) -> (RegisterResult);
   registerBrand: (BrandRegisterArg) -> (RegisterResult);
   registerUser: (text) -> (RegisterResult);
+  transferICP: (blob, Tokens) -> (TransferResult);
+  withdrawRewardPoints: (blob) -> (TransferResult);
 }

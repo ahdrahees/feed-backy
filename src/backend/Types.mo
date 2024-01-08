@@ -5,6 +5,8 @@ import R "mo:base/Result";
 import Principal "mo:base/Principal";
 import Error "mo:base/Error";
 import Time "mo:base/Time";
+import StableBuffer "mo:StableBuffer/StableBuffer";
+import IcpLedgerInterface "service/icp-ledger-interface";
 
 module {
 	public type Time = Time.Time;
@@ -36,6 +38,7 @@ module {
 		var reward : Nat;
 		var feedbackList : List.List<FeedbackId>;
 		var status : Status;
+		blockIndex : Nat;
 	};
 
 	public type Feedback = {
@@ -58,12 +61,18 @@ module {
 		var postList : List.List<PostId>;
 	};
 
+	public type WithdrawHistory = {
+		blockIndex : Nat64;
+		withdrawPoints : Nat;
+	};
+
+	public type WithdrawHistoryMap = Map<Principal, StableBuffer.StableBuffer<WithdrawHistory>>;
+
 	// brandOwner data
 	public type Brand = {
 		id : Nat;
 		owner : Principal;
 		name : Text;
-		var balance : Nat;
 		var lastPost : Int;
 		var postList : List.List<PostId>;
 		industry : Text;
@@ -94,7 +103,7 @@ module {
 
 	public type RegisterError = Error or { #AlreadyRegisterd : (Principal, Text) };
 
-	public type PostResult = Result<(), PostError>;
+	public type PostResult = Result<(), Text>;
 	type PostError = Error or { # LowBalance : Nat; #Reward_Should_Above_10 };
 
 	public type FeedbackResult = Result<(), FeedbackError>;
@@ -141,15 +150,16 @@ module {
 		totalspot : Nat;
 		filledspot : Nat;
 		spotLeft : Nat;
+		blockIndex : Nat;
 	};
 
 	public type QueryBrand = {
 		id : Nat;
 		principal : Text;
 		name : Text;
-		balance : Nat;
 		lastPost : Int;
 		totalPosts : Nat;
+		account : IcpLedgerInterface.Account;
 
 		industry : Text;
 		productOrServiceCategory : Text;
@@ -161,6 +171,7 @@ module {
 		industry : Text;
 		productOrServiceCategory : Text;
 		targetAudience : Text;
+		account : IcpLedgerInterface.Account;
 	};
 
 	public type QueryUser = {

@@ -1,5 +1,4 @@
 export const idlFactory = ({ IDL }) => {
-  const Result_1 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const FeedbackId__1 = IDL.Nat;
   const QueryPost = IDL.Record({
     'created' : IDL.Int,
@@ -9,6 +8,7 @@ export const idlFactory = ({ IDL }) => {
     'spotLeft' : IDL.Nat,
     'totalspot' : IDL.Nat,
     'rewardLeft' : IDL.Nat,
+    'blockIndex' : IDL.Nat,
     'brandName' : IDL.Text,
     'postId' : IDL.Nat,
   });
@@ -84,9 +84,14 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Vec(QueryPost),
     'err' : Error,
   });
+  const Account = IDL.Record({
+    'owner' : IDL.Principal,
+    'subaccount' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+  });
   const BrandBasicInfo = IDL.Record({
     'productOrServiceCategory' : IDL.Text,
     'targetAudience' : IDL.Text,
+    'account' : Account,
     'brandName' : IDL.Text,
     'industry' : IDL.Text,
   });
@@ -100,17 +105,7 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Vec(QueryPost),
     'err' : Error,
   });
-  const PostError = IDL.Variant({
-    'LowBalance' : IDL.Nat,
-    'AnonymousNotAllowed' : IDL.Null,
-    'BrandNotFound' : IDL.Null,
-    'OwnerNotFound' : IDL.Null,
-    'Reward_Should_Above_10' : IDL.Null,
-    'PostNotFound' : IDL.Null,
-    'UserNotFound' : IDL.Null,
-    'TimeRemaining' : IDL.Int,
-  });
-  const PostResult = IDL.Variant({ 'ok' : IDL.Null, 'err' : PostError });
+  const PostResult = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const FeedbackError = IDL.Variant({
     'NoSpotLeft' : IDL.Null,
     'AnonymousNotAllowed' : IDL.Null,
@@ -129,9 +124,9 @@ export const idlFactory = ({ IDL }) => {
     'id' : IDL.Nat,
     'principal' : IDL.Text,
     'productOrServiceCategory' : IDL.Text,
-    'balance' : IDL.Nat,
     'name' : IDL.Text,
     'targetAudience' : IDL.Text,
+    'account' : Account,
     'totalPosts' : IDL.Nat,
     'lastPost' : IDL.Int,
     'industry' : IDL.Text,
@@ -169,9 +164,11 @@ export const idlFactory = ({ IDL }) => {
     'Brand' : BrandRegisterArg,
   });
   const RegisterResult = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
+  const Tokens = IDL.Record({ 'e8s' : IDL.Nat64 });
+  const TransferResult = IDL.Variant({ 'ok' : IDL.Nat64, 'err' : IDL.Text });
   return IDL.Service({
-    'addBalance' : IDL.Func([IDL.Nat], [Result_1], []),
-    'checkMyBalance' : IDL.Func([], [IDL.Nat], ['query']),
+    'accounts' : IDL.Func([IDL.Nat], [IDL.Text], []),
+    'checkMyBalance' : IDL.Func([], [IDL.Nat], []),
     'checkUserType' : IDL.Func([], [IDL.Text], ['query']),
     'getAFeedbackAndPost' : IDL.Func(
         [FeedbackId__1],
@@ -200,6 +197,8 @@ export const idlFactory = ({ IDL }) => {
     'getFeedbacksByUser' : IDL.Func([], [UserFeedbacksResult], ['query']),
     'getPost' : IDL.Func([IDL.Nat], [QueryPostResult], ['query']),
     'getPostsByBrand' : IDL.Func([], [BrandPostsResult], ['query']),
+    'numberOfBrands' : IDL.Func([], [IDL.Nat], ['query']),
+    'numberOfUsers' : IDL.Func([], [IDL.Nat], ['query']),
     'post' : IDL.Func([IDL.Vec(IDL.Text), IDL.Nat], [PostResult], []),
     'postfeedback' : IDL.Func(
         [IDL.Nat, IDL.Vec(IDL.Text), IDL.Bool],
@@ -211,6 +210,12 @@ export const idlFactory = ({ IDL }) => {
     'register' : IDL.Func([Registration], [RegisterResult], []),
     'registerBrand' : IDL.Func([BrandRegisterArg], [RegisterResult], []),
     'registerUser' : IDL.Func([IDL.Text], [RegisterResult], []),
+    'transferICP' : IDL.Func([IDL.Vec(IDL.Nat8), Tokens], [TransferResult], []),
+    'withdrawRewardPoints' : IDL.Func(
+        [IDL.Vec(IDL.Nat8)],
+        [TransferResult],
+        [],
+      ),
   });
 };
 export const init = ({ IDL }) => { return []; };

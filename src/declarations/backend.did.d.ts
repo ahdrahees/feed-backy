@@ -13,6 +13,10 @@ export type AFeedbackAndPostResult = { 'ok' : FeedbackAndPost } |
   };
 export type APostAndFeedbacksResult = { 'ok' : PostAndFeedbacks } |
   { 'err' : PostAndFeedbacksError };
+export interface Account {
+  'owner' : Principal,
+  'subaccount' : [] | [Uint8Array | number[]],
+}
 export type AllClosedPostsResult = { 'ok' : Array<QueryPost> } |
   { 'err' : Error };
 export type AllFeedbackAndPostResult = { 'ok' : Array<FeedbackAndPost> } |
@@ -26,6 +30,7 @@ export type AllUnfilledPostsResult = { 'ok' : Array<QueryPost> } |
 export interface BrandBasicInfo {
   'productOrServiceCategory' : string,
   'targetAudience' : string,
+  'account' : Account,
   'brandName' : string,
   'industry' : string,
 }
@@ -76,24 +81,16 @@ export type PostAndFeedbacksError = { 'AnonymousNotAllowed' : null } |
   { 'NotABrandOwner' : null } |
   { 'UserNotFound' : null } |
   { 'TimeRemaining' : bigint };
-export type PostError = { 'LowBalance' : bigint } |
-  { 'AnonymousNotAllowed' : null } |
-  { 'BrandNotFound' : null } |
-  { 'OwnerNotFound' : null } |
-  { 'Reward_Should_Above_10' : null } |
-  { 'PostNotFound' : null } |
-  { 'UserNotFound' : null } |
-  { 'TimeRemaining' : bigint };
 export type PostId = bigint;
 export type PostResult = { 'ok' : null } |
-  { 'err' : PostError };
+  { 'err' : string };
 export interface QueryBrand {
   'id' : bigint,
   'principal' : string,
   'productOrServiceCategory' : string,
-  'balance' : bigint,
   'name' : string,
   'targetAudience' : string,
+  'account' : Account,
   'totalPosts' : bigint,
   'lastPost' : bigint,
   'industry' : string,
@@ -115,6 +112,7 @@ export interface QueryPost {
   'spotLeft' : bigint,
   'totalspot' : bigint,
   'rewardLeft' : bigint,
+  'blockIndex' : bigint,
   'brandName' : string,
   'postId' : bigint,
 }
@@ -136,12 +134,13 @@ export type Registration = { 'User' : string } |
   { 'Brand' : BrandRegisterArg };
 export type Result = { 'ok' : BrandBasicInfo } |
   { 'err' : string };
-export type Result_1 = { 'ok' : bigint } |
+export interface Tokens { 'e8s' : bigint }
+export type TransferResult = { 'ok' : bigint } |
   { 'err' : string };
 export type UserFeedbacksResult = { 'ok' : Array<Feedback> } |
   { 'err' : Error };
 export interface _SERVICE {
-  'addBalance' : ActorMethod<[bigint], Result_1>,
+  'accounts' : ActorMethod<[bigint], string>,
   'checkMyBalance' : ActorMethod<[], bigint>,
   'checkUserType' : ActorMethod<[], string>,
   'getAFeedbackAndPost' : ActorMethod<[FeedbackId__1], AFeedbackAndPostResult>,
@@ -155,6 +154,8 @@ export interface _SERVICE {
   'getFeedbacksByUser' : ActorMethod<[], UserFeedbacksResult>,
   'getPost' : ActorMethod<[bigint], QueryPostResult>,
   'getPostsByBrand' : ActorMethod<[], BrandPostsResult>,
+  'numberOfBrands' : ActorMethod<[], bigint>,
+  'numberOfUsers' : ActorMethod<[], bigint>,
   'post' : ActorMethod<[Array<string>, bigint], PostResult>,
   'postfeedback' : ActorMethod<
     [bigint, Array<string>, boolean],
@@ -165,4 +166,6 @@ export interface _SERVICE {
   'register' : ActorMethod<[Registration], RegisterResult>,
   'registerBrand' : ActorMethod<[BrandRegisterArg], RegisterResult>,
   'registerUser' : ActorMethod<[string], RegisterResult>,
+  'transferICP' : ActorMethod<[Uint8Array | number[], Tokens], TransferResult>,
+  'withdrawRewardPoints' : ActorMethod<[Uint8Array | number[]], TransferResult>,
 }

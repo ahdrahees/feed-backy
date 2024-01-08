@@ -6,6 +6,16 @@
 			"candid": "https://github.com/dfinity/internet-identity/releases/download/release-2023-09-08/internet_identity.did",
 			"wasm": "https://github.com/dfinity/internet-identity/releases/download/release-2023-09-08/internet_identity_dev.wasm.gz"
 		},
+		"icp_ledger_canister": {
+			"type": "custom",
+			"candid": "https://raw.githubusercontent.com/dfinity/ic/206a50f01306b398eb7e25988c7925fcd0e2caa4/rs/rosetta-api/icp_ledger/ledger.did",
+			"wasm": "https://download.dfinity.systems/ic/206a50f01306b398eb7e25988c7925fcd0e2caa4/canisters/ledger-canister.wasm.gz",
+			"remote": {
+				"id": {
+					"ic": "ryjl3-tyaaa-aaaaa-aaaba-cai"
+				}
+			}
+		},
 		"icrc1_ledger": {
 			"type": "custom",
 			"candid": "src/icrc1_ledger/icrc1-ledger.did",
@@ -21,12 +31,8 @@
 		},
 		"frontend": {
 			"type": "assets",
-			"source": [
-				"build/"
-			],
-			"dependencies": [
-				"backend"
-			],
+			"source": ["build/"],
+			"dependencies": ["backend"],
 			"frontend": {
 				"entrypoint": "build/index.html"
 			}
