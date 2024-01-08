@@ -59,9 +59,9 @@ Once you've created a project and installed dependencies with `npm install` (or 
  ```
 
 **Deploy the Local Internet Identity**: Run the following command to deploy the local Internet Identity:
-    ```
+```
     npm run localii
-    ```
+```
 **Deploy the Local ICP Ledger Canister**: Run the following command to deploy the ICP Ledger Caniter:
 ```
     npm run localicpledger
