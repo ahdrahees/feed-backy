@@ -197,6 +197,8 @@ export const idlFactory = ({ IDL }) => {
     'getFeedbacksByUser' : IDL.Func([], [UserFeedbacksResult], ['query']),
     'getPost' : IDL.Func([IDL.Nat], [QueryPostResult], ['query']),
     'getPostsByBrand' : IDL.Func([], [BrandPostsResult], ['query']),
+    'icpAccountAddress' : IDL.Func([], [IDL.Vec(IDL.Nat8)], []),
+    'icpBalanceOf' : IDL.Func([], [IDL.Nat], []),
     'numberOfBrands' : IDL.Func([], [IDL.Nat], ['query']),
     'numberOfUsers' : IDL.Func([], [IDL.Nat], ['query']),
     'post' : IDL.Func([IDL.Vec(IDL.Text), IDL.Nat], [PostResult], []),

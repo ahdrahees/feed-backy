@@ -6,7 +6,7 @@ fi
 export MINTER_ACCOUNT_ID=$(dfx ledger account-id --identity minter)
 export DEFAULT_ACCOUNT_ID=$(dfx ledger account-id --identity default)
 
-dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger_canister --argument "
+dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger --argument "
   (variant {
     Init = record {
       minting_account = \"$MINTER_ACCOUNT_ID\";

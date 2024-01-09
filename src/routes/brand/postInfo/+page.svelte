@@ -16,7 +16,8 @@
 		totalspot: BigInt(0),
 		rewardLeft: BigInt(0),
 		brandName: '',
-		postId: BigInt(0)
+		postId: BigInt(0),
+		blockIndex: BigInt(0)
 	};
 	let feedbacks: Feedback[] = [];
 
@@ -37,7 +38,8 @@
 				totalspot: BigInt(0),
 				rewardLeft: BigInt(0),
 				brandName: '',
-				postId: BigInt(0)
+				postId: BigInt(0),
+				blockIndex: BigInt(0)
 			};
 			alert('Post Info Page Error : ' + result.err);
 		}

@@ -1,13 +1,17 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { icpBalanceOf, post, queryBrand } from '$lib/api';
+	import { post } from '$lib/api';
 	import { authMethods } from '$lib/auth.store';
 	import { Breadcrumb, BreadcrumbItem } from 'flowbite-svelte';
 	import { Label, Select, Input, GradientButton } from 'flowbite-svelte';
 	import { SyncLoader } from 'svelte-loading-spinners';
 	import { calculatePostCostInICP } from '../../../stores/icp-cost-per-post';
-	import type { Account } from '../../../declarations/icp_ledger_canister/icp_ledger_canister.did';
 	import { onMount } from 'svelte';
+	import {
+		addressStoreUpdate,
+		balanceStore,
+		balanceStoreUpdate
+	} from '../../../stores/address-balance-store';
 
 	type QuestionInput = {
 		placeholder: string;
@@ -28,13 +32,9 @@
 	let postingLoading = false;
 	let icpCostPerPost = 0;
 
-	let account: Account;
-
 	onMount(async () => {
-		let result = await queryBrand();
-		if ('ok' in result) {
-			account = result.ok.account;
-		}
+		await balanceStoreUpdate();
+		await addressStoreUpdate();
 	});
 
 	function calculateInputsNeeded() {
@@ -101,7 +101,7 @@
 		}
 
 		postingLoading = true;
-		let mybalance = await icpBalanceOf(account);
+		let mybalance = $balanceStore;
 		let postCostInICP = BigInt(calculatePostCostInICP(questions.length, Number(feedbackNos)));
 		if (mybalance < postCostInICP) {
 			alert(
@@ -119,6 +119,7 @@
 		const result = await post(questions, feedbackNos__);
 		if ('ok' in result) {
 			goto('/brand');
+			await balanceStoreUpdate();
 		} else if ('err' in result) {
 			console.log(result.err);
 			// if ('LowBalance' in result.err) {
@@ -145,10 +146,10 @@
 	function updatePostCost() {
 		icpCostPerPost = calculatePostCostInICP(questionsInput.length, Number(feedbackNos)) / 10 ** 8;
 	}
-	let balance: number = 0;
+	let balance: number = Number($balanceStore) / 10 ** 8;
 
 	async function myBalanceFN() {
-		balance = Number(await icpBalanceOf(account)) / 10 ** 8;
+		balance = Number($balanceStore) / 10 ** 8;
 	}
 </script>
 

@@ -154,6 +154,8 @@ export interface _SERVICE {
   'getFeedbacksByUser' : ActorMethod<[], UserFeedbacksResult>,
   'getPost' : ActorMethod<[bigint], QueryPostResult>,
   'getPostsByBrand' : ActorMethod<[], BrandPostsResult>,
+  'icpAccountAddress' : ActorMethod<[], Uint8Array | number[]>,
+  'icpBalanceOf' : ActorMethod<[], bigint>,
   'numberOfBrands' : ActorMethod<[], bigint>,
   'numberOfUsers' : ActorMethod<[], bigint>,
   'post' : ActorMethod<[Array<string>, bigint], PostResult>,

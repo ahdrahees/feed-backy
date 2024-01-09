@@ -12,5 +12,6 @@ export const postMemory = writable<QueryPost>({
 	totalspot: BigInt(0),
 	rewardLeft: BigInt(0),
 	brandName: '',
-	postId: BigInt(0)
+	postId: BigInt(0),
+	blockIndex: BigInt(0)
 });

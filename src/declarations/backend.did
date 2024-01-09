@@ -233,6 +233,8 @@ service : {
   getFeedbacksByUser: () -> (UserFeedbacksResult) query;
   getPost: (nat) -> (QueryPostResult) query;
   getPostsByBrand: () -> (BrandPostsResult) query;
+  icpAccountAddress: () -> (blob);
+  icpBalanceOf: () -> (nat);
   numberOfBrands: () -> (nat) query;
   numberOfUsers: () -> (nat) query;
   post: (vec text, nat) -> (PostResult);

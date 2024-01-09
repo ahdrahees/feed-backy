@@ -160,9 +160,6 @@
 				class=" bg-inherit py-4"
 			>
 				<a href=" " slot="right" on:click={() => (visible = true)}><IconQRCodeScanner /></a>
-				<!-- <button slot="right" on:click={() => (visibleQRScanner = true)}
-				><IconQrCodeScanner /></button
-			> -->
 			</Input>
 		</Label>
 		{#if !isValidAddress}

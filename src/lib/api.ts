@@ -18,22 +18,11 @@ import type {
 	RegisterResult,
 	Registration,
 	Result,
-	Result_1,
 	Tokens,
 	TransferResult,
 	UserFeedbacksResult
 } from '../declarations/backend.did';
 import { authMethods } from './auth.store';
-import type {
-	Account,
-	AccountIdentifier,
-	Icrc1Tokens
-} from '../declarations/icp_ledger_canister/icp_ledger_canister.did';
-
-export const addBalance = async (add: bigint): Promise<Result_1> => {
-	const actor = get(authMethods).actor;
-	return actor.addBalance(add);
-};
 
 export const checkMyBalance = async (): Promise<bigint> => {
 	const actor = get(authMethods).actor;
@@ -99,11 +88,6 @@ export const getPostsByBrand = async (): Promise<BrandPostsResult> => {
 	return actor.getPostsByBrand();
 };
 
-export const myWalletAddress = async (): Promise<Uint8Array | number[]> => {
-	const actor = get(authMethods).actor;
-	return actor.myWalletAddress();
-};
-
 export const post = async (questions: Array<string>, reward: bigint): Promise<PostResult> => {
 	const actor = get(authMethods).actor;
 	return actor.post(questions, reward);
@@ -156,12 +140,12 @@ export const withdrawRewardPoints = async (to: Uint8Array | number[]): Promise<T
 	return actor.withdrawRewardPoints(to);
 };
 
-export const icpBalanceOf = async (account: Account): Promise<Icrc1Tokens> => {
-	const icpLedger = get(authMethods).icpLedger;
-	return icpLedger.icrc1_balance_of(account);
+export const icpBalanceOf = async (): Promise<bigint> => {
+	const actor = get(authMethods).actor;
+	return actor.icpBalanceOf();
 };
 
-export const icpAccountAddress = async (account: Account): Promise<AccountIdentifier> => {
-	const icpLedger = get(authMethods).icpLedger;
-	return icpLedger.account_identifier(account);
+export const icpAccountAddress = async (): Promise<Uint8Array | number[]> => {
+	const actor = get(authMethods).actor;
+	return actor.icpAccountAddress();
 };

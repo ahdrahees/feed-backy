@@ -313,6 +313,24 @@ actor feedbacky {
 		};
 	};
 
+	public shared ({ caller }) func icpAccountAddress() : async Blob {
+		switch (Map.get(brandMap, phash, caller)) {
+			case (?brand) {
+				await icpLedgerCanister.account_identifier(U.toAccount(Principal.fromActor(feedbacky), 10 + brand.id));
+			};
+			case (null) { Blob.fromArray([]) };
+		};
+	};
+
+	public shared ({ caller }) func icpBalanceOf() : async Nat {
+		switch (Map.get(brandMap, phash, caller)) {
+			case (?brand) {
+				await icpLedgerCanister.icrc1_balance_of(U.toAccount(Principal.fromActor(feedbacky), 10 + brand.id));
+			};
+			case (null) { 0 };
+		};
+	};
+
 	// Private functions
 	private func _register(
 		brandMap : BrandMap,

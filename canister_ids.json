@@ -4,5 +4,8 @@
 	},
 	"frontend": {
 		"ic": "fzxj3-4qaaa-aaaao-agzya-cai"
+	},
+	"icp_ledger": {
+		"ic": "ryjl3-tyaaa-aaaaa-aaaba-cai"
 	}
 }

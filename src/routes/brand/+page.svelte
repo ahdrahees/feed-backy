@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getPostsByBrand, icpAccountAddress, icpBalanceOf, queryBrand } from '$lib/api';
+	import { getPostsByBrand, queryBrand } from '$lib/api';
 	import { authMethods } from '$lib/auth.store';
 	import { GradientButton } from 'flowbite-svelte';
 	import { Card, Badge, Accordion, AccordionItem, Spinner } from 'flowbite-svelte';
@@ -8,14 +8,18 @@
 	import { postIdMemory } from '../../stores/post-memory';
 	import { goto } from '$app/navigation';
 	import { convertNanosecondsToReadableDate } from '../../stores/unix-to-date';
-	import { getICPLedgerActor } from '$lib/actor';
-	import type { AccountIdentifier } from '../../declarations/icp_ledger_canister/icp_ledger_canister.did';
-	import { AnonymousIdentity } from '@dfinity/agent';
 	import { Copy } from '@dfinity/gix-components';
+	import {
+		addressStore,
+		addressStoreUpdate,
+		balanceStore,
+		balanceStoreUpdate
+	} from '../../stores/address-balance-store';
+	import { onMount } from 'svelte';
 
 	type SubAccount = Uint8Array | number[];
 
-	let balance: BigInt = BigInt(0);
+	let balance: BigInt = $balanceStore;
 	let allMyPosts: Array<QueryPost> = [];
 	let account: Account;
 
@@ -31,7 +35,13 @@
 		targetAudience: ''
 	};
 
-	let icpWalletAddress = '';
+	const toHexString = (subAccount: SubAccount) => {
+		return Array.from(subAccount, function (byte) {
+			return ('0' + (byte & 0xff).toString(16)).slice(-2);
+		}).join('');
+	};
+
+	let icpWalletAddress = toHexString($addressStore);
 
 	async function getMyAllposts() {
 		const result = await getPostsByBrand();
@@ -50,8 +60,6 @@
 		if ('ok' in result) {
 			myInfo = result.ok;
 			account = result.ok.account;
-			await getIcpBalance();
-			await getIcpAddress();
 		} else if ('err' in result) {
 			console.log(result.err);
 			myInfo = {
@@ -72,34 +80,17 @@
 		goto('/brand/postInfo');
 	}
 
-	const toHexString = (subAccount: SubAccount) => {
-		return Array.from(subAccount, function (byte) {
-			return ('0' + (byte & 0xff).toString(16)).slice(-2);
-		}).join('');
-	};
-
-	// async function getBalanceAndWalletAddress(account: Account) {
-	// 	// const authenticatedIdentityConnectedIcpLedger  = await getICPLedgerActor($authMethods.identity);
-	// 	const icpLedgerActor = await getICPLedgerActor($authMethods.identity);
-
-	// 	balance = await icpLedgerActor.icrc1_balance_of(account);
-	// 	let address: AccountIdentifier = await icpLedgerActor.account_identifier(account);
-	// 	icpWalletAddress = toHexString(address);
-	// }
-
-	async function getIcpBalance() {
-		balance = await icpBalanceOf(account);
-	}
-	async function getIcpAddress() {
-		icpWalletAddress = toHexString(await icpAccountAddress(account));
-	}
-
 	function shortenWalletAddress(address: string) {
 		const firstSixChars = address.slice(0, 8);
 		const lastFourChars = address.slice(-7);
 		const middleEllipsis = '...';
 		return firstSixChars + middleEllipsis + lastFourChars;
 	}
+
+	onMount(async () => {
+		await balanceStoreUpdate();
+		await addressStoreUpdate();
+	});
 </script>
 
 {#if $authMethods.isAuthenticated}

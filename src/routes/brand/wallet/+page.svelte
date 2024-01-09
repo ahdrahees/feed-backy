@@ -5,7 +5,7 @@
 	import { QRCode } from '@dfinity/gix-components';
 	import { Card, Button } from 'flowbite-svelte';
 	import { authMethods } from '$lib/auth.store';
-	import { icpAccountAddress, icpBalanceOf, queryBrand, transferICP } from '$lib/api';
+	import { transferICP } from '$lib/api';
 	import { GradientButton, Label, Input } from 'flowbite-svelte';
 	import { Modal } from 'flowbite-svelte';
 	import icplogo from '$lib/assets/ICPwhitelogo.svg';
@@ -16,28 +16,31 @@
 	import { Modal as GixModal } from '@dfinity/gix-components';
 	import type { Tokens } from '../../../declarations/backend.did';
 	import { onMount } from 'svelte';
-	import type { Account } from '../../../declarations/icp_ledger_canister/icp_ledger_canister.did';
+	import {
+		addressStore,
+		addressStoreUpdate,
+		balanceStore,
+		balanceStoreUpdate
+	} from '../../../stores/address-balance-store';
 
 	let receiveModal = false;
 	let transferModal = false;
 
 	type SubAccount = Uint8Array | number[];
-	let icpWalletAddress = '';
-	let account: Account;
-
-	onMount(async () => {
-		let result = await queryBrand();
-		if ('ok' in result) {
-			account = result.ok.account;
-			await getMyWalletAddress();
-		}
-	});
 
 	const toHexString = (subAccount: SubAccount) => {
 		return Array.from(subAccount, function (byte) {
 			return ('0' + (byte & 0xff).toString(16)).slice(-2);
 		}).join('');
 	};
+
+	let icpWalletAddress = toHexString($addressStore);
+
+	onMount(async () => {
+		await addressStoreUpdate();
+		await balanceStoreUpdate();
+	});
+
 	const fromHexString = (hex: string) => {
 		if (hex.substr(0, 2) === '0x') hex = hex.substr(2);
 		for (var bytes = [], c = 0; c < hex.length; c += 2) bytes.push(parseInt(hex.substr(c, 2), 16));
@@ -51,22 +54,14 @@
 		return isHex(a) && a.length === 64;
 	};
 
-	async function getMyWalletAddress() {
-		icpWalletAddress = toHexString(await icpAccountAddress(account));
-		await getCurrentBalance();
-	}
-
 	function shortenWalletAddress(address: string) {
 		const firstSixChars = address.slice(0, 6);
 		const lastFourChars = address.slice(-7);
 		const middleEllipsis = '...';
 		return firstSixChars + middleEllipsis + lastFourChars;
 	}
-	let currentBalance: number = 0;
+	let currentBalance: number = Number($balanceStore);
 
-	async function getCurrentBalance() {
-		currentBalance = Number(await icpBalanceOf(account));
-	}
 	let amount: number;
 	let address: string;
 	let validAmountBool: boolean = true;
@@ -94,7 +89,7 @@
 		let result = await transferICP(to, transferAmount);
 
 		if ('ok' in result) {
-			await getCurrentBalance();
+			await balanceStoreUpdate();
 		} else if ('err' in result) {
 			console.log(result.err);
 			alert('Transfer Error : ' + result.err);
@@ -127,7 +122,6 @@
 </Breadcrumb>
 
 {#if $authMethods.isAuthenticated}
-	<!-- {#await getMyWalletAddress() then _} -->
 	<div class="flex justify-center mt-5 mx-2">
 		<Card size="xl" class="w-full">
 			<div class="flex md:flex-row md:justify-between flex-col items-center">
@@ -234,7 +228,6 @@
 			</div>
 		</Card>
 	</div>
-	<!-- {/await} -->
 	<Modal title="Receive" bind:open={receiveModal} color="purple" size="xs" autoclose>
 		<div class="m-14">
 			<QRCode value={icpWalletAddress} ariaLabel="ICP wallet address">
@@ -259,7 +252,7 @@
 				class="px-14 py-3 m-1 w-full"
 				shadow
 				color="purple"
-				on:click={async () => await getCurrentBalance()}>Finish</GradientButton
+				on:click={async () => await balanceStoreUpdate()}>Finish</GradientButton
 			>
 		</svelte:fragment>
 	</Modal>
