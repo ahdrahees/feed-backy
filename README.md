@@ -26,7 +26,7 @@ Before you begin, ensure you have met the following requirements:
 
 - **mops**: You have installed `mops`. If not, you can install it using npm by running the command `npm install -g mops`.
 
-- **Google AI Studio**: The project uses Google AI Studio for generating questions and verifying feedback authenticity. The model used is `Gemini Pro`. You can get an API Key from [Google AI Studio](https://makersuite.google.com/) for free.
+- **Google AI Studio**: The project uses Google AI Studio for generating questions and verifying feedback authenticity. The model used is `Gemini Pro`. You can get an API Key from [Google AI Studio](https://makersuite.google.com/) for free. If it is difficult to get the API key, feel free to use this API key `AIzaSyB5sOCEeMiu4ZrWyAA6MwziuS-DX2tHr6U`.
 
 Please ensure all these prerequisites are met before proceeding with the setup of the project.
 
@@ -49,6 +49,7 @@ Begin by opening a terminal window.
  ### Step 1: Navigate into the folder containing the project's files and start a local instance of the Internet Computer with the command:
 
 `cd feedbacky`
+`npm i`
 `dfx start --background --clean`
 
 Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
@@ -62,13 +63,19 @@ Once you've created a project and installed dependencies with `npm install` (or 
 ```
     npm run localii
 ```
-**Deploy the Local ICP Ledger Canister**: Run the following command to deploy the ICP Ledger Caniter:
+**Deploy the Local ICP Ledger Canister**: Run the following command to deploy the ICP Ledger Caniter locally and this script will mint 100 Local ICP tokens to your default identity:
 ```
     npm run localicpledger
 ```
-**Deploy the Backend**: Follow the instructions in the backend README to deploy the backend.
+**Deploy the Backend**: Run the following command to to deploy the backend locally.
+```
+    dfx deploy backend
+```
 
-**Deploy the Frontend**: Follow the instructions in the frontend README to deploy the frontend.
+**Deploy the Frontend**: Run the following command to to deploy the frontend locally.
+```
+dfx deploy frontend
+```
 
 **Rename the .env.devlopment.example & .env.production.example**: Rename the `.env.devlopment.example` to `.env.devlopment`. And rename & `.env.production.example` to `.env.production` if you are deploying in mainnet.
 
@@ -76,11 +83,41 @@ Once you've created a project and installed dependencies with `npm install` (or 
 
 Please ensure all these steps are followed correctly for the proper setup of the development environment.
 
+To start vite server open a new terminal tab in the same directory and run the following command:
+
 ```bash
 npm run dev
 
 # or start the server and open the app in a new browser tab
 npm run dev -- --open
+```
+## How to interact with this application locally:
+
+You can interact with application locally in two ways feel free to follow one of them:
+1. Using vite server. You can copy the vite local server url in the `npm run dev` terminal tab and interact through browser.
+2. Using frontend canister. follow this url `http://YOUR_FRONTEND_CANISTER_ID.localhost:8080` replace the `YOUR_FRONTEND_CANISTER_ID` with your frontend canister ID in the url (If necessary replace the port number in the url with your local instance of the Internet Computer running port number in case you are not able to access frontend canister locally).
+
+## How to transfer ICP Local token:
+100 ICP Local token minted by the local ICP ledger canister will be available in the account of your `default` identity.
+To use default Identity :
+```
+dfx identity use default
+```
+To check balance of ICP Local tokens in default identity:
+```
+dfx ledger balance
+```
+To get your ICP local address in the default identity :
+```
+dfx ledger account-id
+```
+To check balance of ICP Local tokens of any address :
+```
+dfx ledger balance <ADDRESS>
+```
+To transfer ICP to other address:
+```
+dfx ledger transfer --amount <AMOUNT> <ADDRESS> --memo 0
 ```
 
 ## Building
